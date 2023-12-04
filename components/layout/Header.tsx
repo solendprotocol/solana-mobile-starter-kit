@@ -14,7 +14,7 @@ export function Header({
   rightNavigation: DrawerNavigationHelpers;
 }) {
   return (
-      <View className="px-4 bg-neutral border-b border-line flex flex-row justify-between items-center">
+      <View className="px-4 bg-neutralAlt border-b border-line flex flex-row justify-between items-center">
         <View className="flex flex-row justify-between items-center">
           <TouchableOpacity
             onPress={() => leftNavigation.openDrawer()}

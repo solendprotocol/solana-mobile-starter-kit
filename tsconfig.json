@@ -5,6 +5,7 @@
     /* Visit https://aka.ms/tsconfig.json to read more about this file */
 
     /* Completeness */
+    "strict": true,
     "skipLibCheck": true,
     "baseUrl": ".",
     "paths": {

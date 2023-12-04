@@ -6,12 +6,13 @@ import {
   ReauthorizeAPI,
 } from '@solana-mobile/mobile-wallet-adapter-protocol';
 import {Web3MobileWallet, transact} from '@solana-mobile/mobile-wallet-adapter-protocol-web3js';
-import {toUint8Array} from 'js-base64';
+import {toUint8Array, fromUint8Array} from 'js-base64';
 import React, {useState, useCallback, useMemo, ReactNode, useEffect} from 'react';
 import { alertAndLog } from '@/shared/alertAndLog';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {RPC_ENDPOINT, useConnection} from './useConnection';
 import { APP_IDENTITY } from '@/shared/configs';
+import bs58 from 'bs58';
 
 function getPublicKeyFromAddress(address: Base64EncodedAddress): PublicKey {
   const publicKeyByteArray = toUint8Array(address);
@@ -24,6 +25,7 @@ export interface WalletContext {
   disconnect: () => void
   authorizationInProgress: boolean;
   sendTransaction: (txn: Transaction) => Promise<TransactionConfirmationStrategy | undefined>;
+  signMessage: (message: string) => Promise<string | undefined>;
 }
 
 const WalletContext = React.createContext<WalletContext>({
@@ -36,6 +38,9 @@ const WalletContext = React.createContext<WalletContext>({
   sendTransaction: () => {
     throw new Error('useWallet not initialized');
   },
+  signMessage: () => {
+    throw new Error('useWallet not initialized');
+  },
   publicKey: null,
   authorizationInProgress: false
 });
@@ -44,10 +49,6 @@ function WalletProvider({autoconnect = true, children}: {children: ReactNode, au
   const [
     authorizationInProgress,
     setAuthorizationInProgress
-  ] = useState(false);
-  const [
-    signingInProgress,
-    setSigningInProgress
   ] = useState(false);
   const { connection } = useConnection();
   const [authorization, setAuthorization] = useState<{
@@ -99,15 +100,47 @@ function WalletProvider({autoconnect = true, children}: {children: ReactNode, au
     [authorization],
   );
 
+  const signMessage = useCallback(
+    async (message: string) => {
+      const messageBuffer = new Uint8Array(
+        message.split('').map(c => c.charCodeAt(0)),
+      );
+
+      return await transact(async (walletArg: Web3MobileWallet) => {
+        if (!authorization?.publicKey) return;
+        authorizeSession(walletArg)
+
+        // Sign the payload with the provided address from authorization.
+        setAuthorizationInProgress(true);
+        console.log(fromUint8Array(bs58.decode(authorization.publicKey.toBase58())))
+        try {
+          const signedMessages = await walletArg.signMessages({
+            addresses: [fromUint8Array(bs58.decode(authorization.publicKey.toBase58()))],
+            payloads: [messageBuffer],
+          });
+          return fromUint8Array(signedMessages[0]);
+        } catch (err: any) {
+          alertAndLog(
+            'Error during signing',
+            err instanceof Error ? err.message : err,
+          );
+        } finally {
+          setAuthorizationInProgress(false);
+        }
+      });
+    },
+    [authorizeSession],
+  );
+
   const sendTransaction = useCallback(
     async (txn: Transaction): Promise<TransactionConfirmationStrategy | undefined> => {
+      const recentBlockhash  = await connection.getLatestBlockhash();
       const signedTransaction = await transact(
         async (walletArg: Web3MobileWallet) => {
-          await Promise.all([
-            authorizeSession(walletArg),
-            connection.getLatestBlockhash(),
-          ]);
+          await authorizeSession(walletArg);
 
+          txn.recentBlockhash = recentBlockhash.blockhash;
+          txn.feePayer = authorization?.publicKey;
           const signedTransactions = await walletArg.signTransactions({
             transactions: [txn],
           });
@@ -116,15 +149,16 @@ function WalletProvider({autoconnect = true, children}: {children: ReactNode, au
         },
       );
 
-      if (signingInProgress) {
+      if (authorizationInProgress) {
         return undefined;
       }
 
-      setSigningInProgress(true);
+      setAuthorizationInProgress(true);
       try {
         const latestBlockhash = await connection.getLatestBlockhash();
         const signature = await connection.sendRawTransaction(
           signedTransaction!.serialize(),
+          {skipPreflight: true}
         );
         return {
           signature,
@@ -136,10 +170,10 @@ function WalletProvider({autoconnect = true, children}: {children: ReactNode, au
           err instanceof Error ? err.message : err,
         );
       } finally {
-        setSigningInProgress(false);
+        setAuthorizationInProgress(false);
       }
     },
-    [authorizeSession, connection, signingInProgress],
+    [authorizeSession, connection, authorizationInProgress, authorization],
   );  
 
   const connect = useCallback(async () => {
@@ -185,6 +219,7 @@ function WalletProvider({autoconnect = true, children}: {children: ReactNode, au
       disconnect,
       publicKey: authorization?.publicKey ?? null,
       authorizationInProgress,
+      signMessage,
       sendTransaction
     }),
     [
@@ -192,6 +227,7 @@ function WalletProvider({autoconnect = true, children}: {children: ReactNode, au
       disconnect,
       authorization?.publicKey,
       authorizationInProgress,
+      signMessage,
       sendTransaction
     ],
   );

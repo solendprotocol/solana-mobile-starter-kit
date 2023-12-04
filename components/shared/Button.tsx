@@ -4,24 +4,26 @@ import { twMerge } from 'tailwind-merge'
 
 function Button(
   props: PressableProps & {
-    buttonStyle?: 'primary' | 'tag';
+    variant?: 'primary' | 'tag';
     full?: boolean;
     overrideClassName?: string;
   },
 ): ReactElement {
-  let buttonClassName = twMerge(
-    "items-center border border-line bg-primary flex justify-center p-2 my-2",
-    props.full ? 'w-full ' : '',
-    props.overrideClassName
-  );
+  let buttonClassName = "items-center border border-line bg-primary flex justify-center p-2 my-2";
 
-  if (props.buttonStyle === 'tag') {
+  if (props.variant === 'tag') {
     buttonClassName =
       'items-center border border-line bg-neutralAlt flex justify-center px-1 py-0.5';
   }
 
   return (
-    <Pressable {...props} className={buttonClassName}>
+    <Pressable {...props} 
+    className={twMerge(
+      buttonClassName,
+      props.full ? 'w-full ' : '',
+    props.overrideClassName
+    )}
+    >
       {props.children as React.ReactNode}
     </Pressable>
   );

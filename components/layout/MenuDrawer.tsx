@@ -17,7 +17,7 @@ export default function MenuDrawer({navigation, state}: DrawerContentComponentPr
               navigation.closeDrawer();
             }}
             className={twMerge("flex border-b border-line p-4 w-full", state.index === demo.index ? 'bg-neutralAlt' : undefined)}>
-            <Typography level='title'>
+            <Typography level='headline'>
               {demo.item}
             </Typography>
           </Pressable>

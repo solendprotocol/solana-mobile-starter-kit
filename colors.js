@@ -1,4 +1,4 @@
-export default {
+module.exports = {
     primary: '#ffffff',
     secondary: '#64676d',
     line: '#22252e',

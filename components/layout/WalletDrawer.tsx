@@ -1,6 +1,6 @@
 import React from 'react';
 import Typography from '@/components/shared/Typography';
-import {FlatList, Pressable, View} from 'react-native';
+import {FlatList, Image, Pressable, View} from 'react-native';
 import { DrawerContentComponentProps } from '@react-navigation/drawer';
 import { useTokens } from '@/components/providers/useTokens';
 import { formatAddress } from '@/shared/utils';
@@ -24,24 +24,25 @@ export default function MenuDrawer({navigation}: DrawerContentComponentProps) {
   }
 
   return (
-    <><View className='flex w-full p-2 mb-2 justify-center'><Typography level="headline">
+    <><View className='bg-neutralAlt flex w-full p-2 justify-center'><Typography textClassName='text-center mb-2' level="headline">
     Account ({formatAddress(publicKey?.toBase58() ?? '')})
   </Typography>
-  <View className="flex w-full flex-row mt-2 justify-between">
+  <View className="flex w-full flex-row justify-between">
     <Button
-      buttonStyle="tag"
+      variant="tag"
       onPress={() => {
         if (publicKey) {
           Clipboard.setString(publicKey.toBase58());
-          alertAndLog('Address copied!', publicKey);
+          alertAndLog('Address copied!', publicKey.toBase58());
         }
-      }}>
+      }}
+      >
       <Typography level="caption">
         <Icon name="content-copy" size={8} /> Copy address
       </Typography>
     </Button>
     <Button
-      buttonStyle="tag"
+      variant="tag"
       onPress={() => {
         disconnect();
         navigation.closeDrawer();
@@ -61,13 +62,25 @@ export default function MenuDrawer({navigation}: DrawerContentComponentProps) {
         renderItem={tokenAccount => (
           <Pressable
             key={tokenAccount.item.mintAddress}
-            className="flex border-b border-line p-4 w-full">
-            <Typography level='title'>
-              {tokenAccount.item.symbol}: {tokenAccount.item.balance.toFixed(4)}
+            className="flex justify-between border-b border-line p-4 w-full flex-row items-center"
+          >
+            <View className='flex items-center'>
+            {tokenAccount.item.logoURI && <Image
+            className='overflow-hidden rounded-full w-8 h-8'
+                source={{height: 12, uri: tokenAccount.item.logoURI}}
+                resizeMode='contain'
+            />}
+            <Typography level='headline'>
+                {tokenAccount.item.symbol}
+            </Typography>
+            </View>
+            <Typography level='headline'>
+              {tokenAccount.item.balance.toFixed(4)}{' '}{tokenAccount.item.symbol}
             </Typography>
           </Pressable>
         )}
-      /></>
+      />
+      </>
      
   );
 }

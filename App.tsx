@@ -14,9 +14,11 @@ import Loading from '@/components/shared/Loading';
 import { Suspense, useCallback } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { DrawerHeaderProps, DrawerNavigationHelpers } from '@react-navigation/drawer/lib/typescript/src/types';
-import { colors } from '@/colors';
+import colors from '@/colors';
 import WalletDrawer from '@/components/layout/WalletDrawer';
 import AirdropScreen from '@/screens/AirdropScreen';
+import SignTransactionScreen from '@/screens/SignTransactionScreen';
+import SendTransactionScreen from '@/screens/SendTransactionScreen';
 
 
 const DemoApp = createDrawerNavigator();
@@ -31,21 +33,24 @@ const MainAppContainer = ({navigation}: {navigation: DrawerNavigationHelpers}) =
 
   return (
     <>
-    <DemoApp.Navigator
-      screenOptions={{
-        drawerPosition: 'left',
-        swipeEdgeWidth: 100,
-        header: CustomHeader,
-        drawerActiveBackgroundColor: colors.neutral,
-        drawerStyle: {
-          backgroundColor: colors.neutral
-        }
-      }}
-      drawerContent={MenuDrawer}
-    >
-      <DemoApp.Screen name="Home" component={HomeScreen}/>
-      <DemoApp.Screen name="Request Airdrop" component={AirdropScreen}/>
-    </DemoApp.Navigator>
+      <DemoApp.Navigator
+        initialRouteName="Home"
+        screenOptions={{
+          drawerPosition: 'left',
+          swipeEdgeWidth: 100,
+          header: CustomHeader,
+          drawerActiveBackgroundColor: colors.neutral,
+          drawerStyle: {
+            backgroundColor: colors.neutral
+          }
+        }}
+        drawerContent={MenuDrawer}
+      >
+        <DemoApp.Screen name="Home" component={HomeScreen}/>
+        <DemoApp.Screen name="Request Airdrop" component={AirdropScreen}/>
+        <DemoApp.Screen name="Sign Transaction" component={SignTransactionScreen}/>
+        <DemoApp.Screen name="Send Transaction" component={SendTransactionScreen}/>
+      </DemoApp.Navigator>
     </>
   );
 };

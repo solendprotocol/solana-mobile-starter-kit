@@ -7,11 +7,14 @@ import { alertAndLog } from '@/shared/alertAndLog';
 import Button from '@/components/shared/Button';
 import { useConnection } from '@/components/providers/useConnection';
 import { useWallet } from '@/components/providers/useWallet';
+import { useTokens } from '@/components/providers/useTokens';
+import { NATIVE_MINT } from '@solana/spl-token';
 
 export default function AirdropScreen() {
   const {connection} = useConnection();
   const {publicKey} = useWallet();
   const [airdropInProgress, setAirdropInProgress] = useState(false);
+  const { tokenAccounts} = useTokens();
   const requestAirdrop = useCallback(async () => {
     if (!publicKey) {
       return;
@@ -28,17 +31,21 @@ export default function AirdropScreen() {
     });
   }, [connection, publicKey]);
 
+  const solAccount = tokenAccounts[NATIVE_MINT.toBase58()];
+
   return (
     <View className='h-full bg-neutral'>
-      <View className='flex items-center justify-center gap-8 pt-24'>
+      <View className='flex items-center justify-center pt-24'>
       <Image
         className="h-24"
         source={require('@/assets/vertical_logotype.png')}
         resizeMode='contain'
       />
-      <View className='max-w-xs'>
-        <Typography level='display'>Request an airdrop from Devnet</Typography>
+      <View className='max-w-xs flex mt-4 items-center'>
+        <Typography level='title'>Request an airdrop from Devnet</Typography>
             <Button
+            className='my-4'
+            full
           disabled={airdropInProgress}
           onPress={async () => {
             if (airdropInProgress) {
@@ -63,6 +70,7 @@ export default function AirdropScreen() {
             }
           }}
         ><Typography color="neutral" level='caption'>Request Airdrop</Typography></Button>
+        <Typography>Current balance: {solAccount?.balance?.toFixed(4) ?? '0'} SOL</Typography>
       </View>
       </View>
     </View>

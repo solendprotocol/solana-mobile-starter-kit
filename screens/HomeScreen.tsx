@@ -18,11 +18,12 @@ export default function HomeScreen() {
       />
       <View className='max-w-xs mt-8'>
         <Typography level='display'>Welcome to the CSRN template</Typography>
-        <br/>
+      </View>
+      <View className='mt-8'>
         <Typography level='headline'>To get started, theme the app to your brand:</Typography>
-        <Typography level='headline'>· Click the Menu Icon to explore demos</Typography>
-        <Typography level='headline'>· Theme your app in config.ts</Typography>
-        <Typography level='headline'>· Make transactions</Typography>
+          <Typography level='headline'>· Click the Menu Icon to explore demos</Typography>
+          <Typography level='headline'>· Theme your app in config.ts</Typography>
+          <Typography level='headline'>· Make transactions</Typography>
       </View>
       </View>
     </View>

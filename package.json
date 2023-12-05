@@ -5,7 +5,7 @@
   "scripts": {
     "android": "react-native run-android",
     "ios": "react-native run-ios",
-    "lint": "yarn prettier --write App.tsx \"{shared,screens,components}/**/*.js\" && eslint .",
+    "lint": "yarn prettier --write . && eslint .",
     "start": "react-native start",
     "test": "jest"
   },
@@ -37,8 +37,7 @@
     "react-native-url-polyfill": "^1.3.0",
     "react-native-vector-icons": "@10.0.0",
     "tailwind-merge": "^2.0.0",
-    "text-encoding": "^0.7.0",
-    "typescript": "^4.9.4"
+    "text-encoding": "^0.7.0"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",

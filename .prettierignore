@@ -1,0 +1,6 @@
+__test__
+.bundle
+android
+assets
+node_modules
+vendor

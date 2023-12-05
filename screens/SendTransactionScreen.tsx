@@ -34,12 +34,12 @@ export default function SendTransactionScreen() {
         source={require('@/assets/vertical_logotype.png')}
         resizeMode='contain'
       />
-      <View className='max-w-xs flex mt-4 items-center'>
+      <View className='max-w-xs flex mt-8 items-center'>
         <Typography level='title'>Transfer SOL to address</Typography>
         <Input
             value={recipientAddress}
             onChangeText={(text) => setRecipientAddress(text)}
-            className='text-center'
+            innerClassName='text-center border border-line mt-8 w-64'
             placeholder='Enter recipient address'
         />
         {recipientAddress && !validRecipient && <Typography level='caption' color='brand'>
@@ -48,13 +48,14 @@ export default function SendTransactionScreen() {
         <Input
             value={amount.toString()}
             onChangeText={(text) => setAmount(text)}
-            className='text-center'
-            placeholder='Enter message to sign'
+            innerClassName='text-center border border-line mt-8 w-64'
+            placeholder='Enter amount to send'
         />
         {amount && !validAmount && <Typography level='caption' color='brand'>
             Not a valid amount
             </Typography>}
             <Button
+            className='mt-8'
             full
           disabled={authorizationInProgress || !validRecipient || !validAmount}
           onPress={async () => {

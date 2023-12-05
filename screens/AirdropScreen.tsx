@@ -41,10 +41,10 @@ export default function AirdropScreen() {
         source={require('@/assets/vertical_logotype.png')}
         resizeMode='contain'
       />
-      <View className='max-w-xs flex mt-4 items-center'>
+      <View className='max-w-xs flex my-8 items-center'>
         <Typography level='title'>Request an airdrop from Devnet</Typography>
             <Button
-            className='my-4'
+            className='my-8'
             full
           disabled={airdropInProgress}
           onPress={async () => {

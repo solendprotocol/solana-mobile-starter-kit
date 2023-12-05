@@ -10,14 +10,14 @@ export default function HomeScreen() {
 
   return (
     <View className='h-full bg-neutral'>
-      <View className='flex items-center justify-center gap-8 pt-36'>
+      <View className='flex items-center justify-center pt-36'>
       <Image
         className="h-24"
         source={require('@/assets/vertical_logotype.png')}
         resizeMode='contain'
       />
       <View className='max-w-xs mt-8'>
-        <Typography level='display'>Welcome to the CSRN template</Typography>
+        <Typography level='display'>Welcome!</Typography>
       </View>
       <View className='mt-8'>
         <Typography level='headline'>To get started, theme the app to your brand:</Typography>

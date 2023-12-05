@@ -18,15 +18,16 @@ export default function SignTransactionScreen() {
         source={require('@/assets/vertical_logotype.png')}
         resizeMode='contain'
       />
-      <View className='max-w-xs flex mt-4 items-center'>
-        <Typography level='title'>Send deposit some SOL to devnet Solend</Typography>
+      <View className='mt-8 max-w-xs flex items-center'>
+        <Typography level='title'>Sign a message</Typography>
         <Input
           value={inputMessage}
+          innerClassName='text-center border border-line mt-8 w-64'
           onChangeText={(text) => setInputMessage(text)}
-          className='text-center'
-          placeholder='Enter message to sign'
+          placeholder='Enter a message to sign'
         />
             <Button
+            className='mt-8'
             full
           disabled={authorizationInProgress}
           onPress={async () => {

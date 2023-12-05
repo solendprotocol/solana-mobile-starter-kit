@@ -24,6 +24,7 @@ export interface WalletContext {
   connect: () => void;
   disconnect: () => void
   authorizationInProgress: boolean;
+  signAllTransactions: (txn: Array<Transaction>) => Promise<Transaction[]>;
   sendTransaction: (txn: Transaction) => Promise<TransactionConfirmationStrategy | undefined>;
   signMessage: (message: string) => Promise<string | undefined>;
 }
@@ -39,6 +40,9 @@ const WalletContext = React.createContext<WalletContext>({
     throw new Error('useWallet not initialized');
   },
   signMessage: () => {
+    throw new Error('useWallet not initialized');
+  },
+  signAllTransactions: () => {
     throw new Error('useWallet not initialized');
   },
   publicKey: null,
@@ -112,7 +116,6 @@ function WalletProvider({autoconnect = true, children}: {children: ReactNode, au
 
         // Sign the payload with the provided address from authorization.
         setAuthorizationInProgress(true);
-        console.log(fromUint8Array(bs58.decode(authorization.publicKey.toBase58())))
         try {
           const signedMessages = await walletArg.signMessages({
             addresses: [fromUint8Array(bs58.decode(authorization.publicKey.toBase58()))],
@@ -132,22 +135,26 @@ function WalletProvider({autoconnect = true, children}: {children: ReactNode, au
     [authorizeSession],
   );
 
+
+  const signAllTransactions = useCallback(async (transactions: Transaction[]) => {
+    return transact(async (wallet: Web3MobileWallet) => {
+      const recentBlockhash  = await connection.getLatestBlockhash();
+      transactions.forEach(txn => {  
+        txn.recentBlockhash = recentBlockhash.blockhash;
+        txn.feePayer = authorization?.publicKey;
+      })
+      await authorizeSession(wallet);
+      const signedTransactions = await wallet.signTransactions({
+        transactions: transactions,
+      });
+      return signedTransactions;
+    });
+  }, [authorizeSession, connection, authorization]);
+
+
   const sendTransaction = useCallback(
     async (txn: Transaction): Promise<TransactionConfirmationStrategy | undefined> => {
-      const recentBlockhash  = await connection.getLatestBlockhash();
-      const signedTransaction = await transact(
-        async (walletArg: Web3MobileWallet) => {
-          await authorizeSession(walletArg);
-
-          txn.recentBlockhash = recentBlockhash.blockhash;
-          txn.feePayer = authorization?.publicKey;
-          const signedTransactions = await walletArg.signTransactions({
-            transactions: [txn],
-          });
-
-          return signedTransactions[0];
-        },
-      );
+      const signedTransaction = (await signAllTransactions([txn]))[0];
 
       if (authorizationInProgress) {
         return undefined;
@@ -158,6 +165,7 @@ function WalletProvider({autoconnect = true, children}: {children: ReactNode, au
         const latestBlockhash = await connection.getLatestBlockhash();
         const signature = await connection.sendRawTransaction(
           signedTransaction!.serialize(),
+          // TODO: REMOVE
           {skipPreflight: true}
         );
         return {
@@ -220,7 +228,8 @@ function WalletProvider({autoconnect = true, children}: {children: ReactNode, au
       publicKey: authorization?.publicKey ?? null,
       authorizationInProgress,
       signMessage,
-      sendTransaction
+      sendTransaction,
+      signAllTransactions,
     }),
     [
       connect,
@@ -228,7 +237,8 @@ function WalletProvider({autoconnect = true, children}: {children: ReactNode, au
       authorization?.publicKey,
       authorizationInProgress,
       signMessage,
-      sendTransaction
+      sendTransaction,
+      signAllTransactions
     ],
   );
 

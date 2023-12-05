@@ -4,18 +4,21 @@ import {TextInput, TextInputProps} from 'react-native';
 import { twMerge } from 'tailwind-merge'
 
 function Input(
-  props: TextInputProps,
+  props: TextInputProps & {
+    innerClassName?: string,
+  } ,
 ): ReactElement {
 
   return (
     <TextInput
     {...props}
     className={twMerge(
-      'text-primary font-xl',
-      props.className
+      'text-primary font-xl p-1 bg-neutralAlt',
+      props.innerClassName,
     )}
     style={{
-        fontSize: 16
+        fontSize: 16,
+        ...props.style as {},
     }}
     placeholderTextColor={props.placeholderTextColor ?? colors.secondary}
     >

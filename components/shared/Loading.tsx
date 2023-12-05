@@ -29,7 +29,7 @@ export default function Loading({full}: {full?: boolean}) {
         style={{
           transform: [{rotate: rotateValue}],
         }}>
-            <Icon name="sync" color={colors.brand} size={96}/>
+        <Icon name="sync" color={colors.brand} size={96} />
       </Animated.View>
     </View>
   );

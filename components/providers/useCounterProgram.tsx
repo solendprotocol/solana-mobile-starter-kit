@@ -2,14 +2,15 @@ import * as anchor from '@coral-xyz/anchor';
 import {AnchorProvider, Program} from '@coral-xyz/anchor';
 import {PublicKey} from '@solana/web3.js';
 import {useCallback, useMemo, useState} from 'react';
-import {IDL, BasicCounter as BasicCounterProgram} from '@/components/providers/counterProgram/basic_counter';
-import { useConnection } from '@/components/providers/useConnection';
-import { useWallet } from '@/components/providers/useWallet';
-import { alertAndLog } from '@/shared/alertAndLog';
-  
-export function useCounterProgram(
-  anchorWallet: anchor.Wallet | null,
-) {
+import {
+  IDL,
+  BasicCounter as BasicCounterProgram,
+} from '@/components/providers/counterProgram/basic_counter';
+import {useConnection} from '@/components/providers/useConnection';
+import {useWallet} from '@/components/providers/useWallet';
+import {alertAndLog} from '@/shared/alertAndLog';
+
+export function useCounterProgram(anchorWallet: anchor.Wallet | null) {
   const {connection} = useConnection();
   const {sendTransaction, publicKey} = useWallet();
   const [counterValue, setCounterValue] = useState<string | null>(null);
@@ -41,50 +42,48 @@ export function useCounterProgram(
       return null;
     }
 
-    return new Program<BasicCounterProgram>(
-      IDL,
-      counterProgramId,
-      provider,
-    );
+    return new Program<BasicCounterProgram>(IDL, counterProgramId, provider);
   }, [counterProgramId, provider]);
 
-  const fetchAndUpdateCounter = useCallback(
-    async () => {
-      if (!basicCounterProgram) return;
-      const counterAccount =
-          await basicCounterProgram.account.counter.fetch(counterPDA);
-      setCounterValue(counterAccount?.count.toString() ?? '0');
-    },
-    [counterPDA, basicCounterProgram],
-  );
+  const fetchAndUpdateCounter = useCallback(async () => {
+    if (!basicCounterProgram) {
+      return;
+    }
+    const counterAccount = await basicCounterProgram.account.counter.fetch(
+      counterPDA,
+    );
+    setCounterValue(counterAccount?.count.toString() ?? '0');
+  }, [counterPDA, basicCounterProgram]);
 
-  const incrementCounter = useCallback(
-    async () => {
-      // Call the increment function of the program.
-      if (!basicCounterProgram || !publicKey) return;
-      const tx = await basicCounterProgram.methods
-        .increment()
-        .accounts({
-          counter: counterPDA,
-          authority: publicKey,
-        })
-        .transaction();
+  const incrementCounter = useCallback(async () => {
+    // Call the increment function of the program.
+    if (!basicCounterProgram || !publicKey) {
+      return;
+    }
+    const tx = await basicCounterProgram.methods
+      .increment()
+      .accounts({
+        counter: counterPDA,
+        authority: publicKey,
+      })
+      .transaction();
 
-        const signature = await sendTransaction(tx);
-        if (signature) {
-          await connection.confirmTransaction(signature);
-        }
+    const signature = await sendTransaction(tx);
+    if (signature) {
+      await connection.confirmTransaction(signature);
+    }
 
-        alertAndLog(
-          'Counter incremented!',
-          signature?.signature
-        );
-        fetchAndUpdateCounter();
-        return signature?.signature;
-    },
-    [counterPDA],
-  )
-
+    alertAndLog('Counter incremented!', signature?.signature);
+    fetchAndUpdateCounter();
+    return signature?.signature;
+  }, [
+    counterPDA,
+    basicCounterProgram,
+    connection,
+    fetchAndUpdateCounter,
+    publicKey,
+    sendTransaction,
+  ]);
 
   const value = useMemo(
     () => ({
@@ -95,7 +94,14 @@ export function useCounterProgram(
       incrementCounter,
       counterValue,
     }),
-    [basicCounterProgram, counterProgramId, counterPDA, fetchAndUpdateCounter, counterValue],
+    [
+      basicCounterProgram,
+      counterProgramId,
+      counterPDA,
+      fetchAndUpdateCounter,
+      incrementCounter,
+      counterValue,
+    ],
   );
 
   return value;

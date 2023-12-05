@@ -1,17 +1,30 @@
-import {PublicKey, Transaction, TransactionConfirmationStrategy} from '@solana/web3.js';
+import {
+  PublicKey,
+  Transaction,
+  TransactionConfirmationStrategy,
+} from '@solana/web3.js';
 import {
   AuthorizeAPI,
   Base64EncodedAddress,
   DeauthorizeAPI,
   ReauthorizeAPI,
 } from '@solana-mobile/mobile-wallet-adapter-protocol';
-import {Web3MobileWallet, transact} from '@solana-mobile/mobile-wallet-adapter-protocol-web3js';
+import {
+  Web3MobileWallet,
+  transact,
+} from '@solana-mobile/mobile-wallet-adapter-protocol-web3js';
 import {toUint8Array, fromUint8Array} from 'js-base64';
-import React, {useState, useCallback, useMemo, ReactNode, useEffect} from 'react';
-import { alertAndLog } from '@/shared/alertAndLog';
+import React, {
+  useState,
+  useCallback,
+  useMemo,
+  ReactNode,
+  useEffect,
+} from 'react';
+import {alertAndLog} from '@/shared/alertAndLog';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {RPC_ENDPOINT, useConnection} from './useConnection';
-import { APP_IDENTITY } from '@/shared/configs';
+import {APP_IDENTITY} from '@/shared/configs';
 import bs58 from 'bs58';
 
 function getPublicKeyFromAddress(address: Base64EncodedAddress): PublicKey {
@@ -22,10 +35,12 @@ function getPublicKeyFromAddress(address: Base64EncodedAddress): PublicKey {
 export interface WalletContext {
   publicKey: PublicKey | null;
   connect: () => void;
-  disconnect: () => void
+  disconnect: () => void;
   authorizationInProgress: boolean;
   signAllTransactions: (txn: Array<Transaction>) => Promise<Transaction[]>;
-  sendTransaction: (txn: Transaction) => Promise<TransactionConfirmationStrategy | undefined>;
+  sendTransaction: (
+    txn: Transaction,
+  ) => Promise<TransactionConfirmationStrategy | undefined>;
   signMessage: (message: string) => Promise<string | undefined>;
 }
 
@@ -46,21 +61,24 @@ const WalletContext = React.createContext<WalletContext>({
     throw new Error('useWallet not initialized');
   },
   publicKey: null,
-  authorizationInProgress: false
+  authorizationInProgress: false,
 });
 
-function WalletProvider({autoconnect = true, children}: {children: ReactNode, autoconnect?: boolean}) {
-  const [
-    authorizationInProgress,
-    setAuthorizationInProgress
-  ] = useState(false);
-  const { connection } = useConnection();
+function WalletProvider({
+  autoconnect = true,
+  children,
+}: {
+  children: ReactNode;
+  autoconnect?: boolean;
+}) {
+  const [authorizationInProgress, setAuthorizationInProgress] = useState(false);
+  const {connection} = useConnection();
   const [authorization, setAuthorization] = useState<{
     publicKey: PublicKey;
     authToken: string;
   } | null>(null);
 
-  async function autoConnect() {
+  const autoConnect = useCallback(async () => {
     const [cachedAuthToken, cachedBase64Address] = await Promise.all([
       AsyncStorage.getItem('authToken'),
       AsyncStorage.getItem('base64Address'),
@@ -72,13 +90,13 @@ function WalletProvider({autoconnect = true, children}: {children: ReactNode, au
         authToken: cachedAuthToken,
       });
     }
-  }
+  }, []);
 
   useEffect(() => {
     if (autoconnect) {
       autoConnect();
     }
-  }, []);
+  }, [autoConnect, autoconnect]);
 
   const authorizeSession = useCallback(
     async (wallet: AuthorizeAPI & ReauthorizeAPI) => {
@@ -111,14 +129,18 @@ function WalletProvider({autoconnect = true, children}: {children: ReactNode, au
       );
 
       return await transact(async (walletArg: Web3MobileWallet) => {
-        if (!authorization?.publicKey) return;
-        authorizeSession(walletArg)
+        if (!authorization?.publicKey) {
+          return;
+        }
+        authorizeSession(walletArg);
 
         // Sign the payload with the provided address from authorization.
         setAuthorizationInProgress(true);
         try {
           const signedMessages = await walletArg.signMessages({
-            addresses: [fromUint8Array(bs58.decode(authorization.publicKey.toBase58()))],
+            addresses: [
+              fromUint8Array(bs58.decode(authorization.publicKey.toBase58())),
+            ],
             payloads: [messageBuffer],
           });
           return fromUint8Array(signedMessages[0]);
@@ -132,28 +154,31 @@ function WalletProvider({autoconnect = true, children}: {children: ReactNode, au
         }
       });
     },
-    [authorizeSession],
+    [authorizeSession, setAuthorizationInProgress, authorization?.publicKey],
   );
 
-
-  const signAllTransactions = useCallback(async (transactions: Transaction[]) => {
-    return transact(async (wallet: Web3MobileWallet) => {
-      const recentBlockhash  = await connection.getLatestBlockhash();
-      transactions.forEach(txn => {  
-        txn.recentBlockhash = recentBlockhash.blockhash;
-        txn.feePayer = authorization?.publicKey;
-      })
-      await authorizeSession(wallet);
-      const signedTransactions = await wallet.signTransactions({
-        transactions: transactions,
+  const signAllTransactions = useCallback(
+    async (transactions: Transaction[]) => {
+      return transact(async (wallet: Web3MobileWallet) => {
+        const recentBlockhash = await connection.getLatestBlockhash();
+        transactions.forEach(txn => {
+          txn.recentBlockhash = recentBlockhash.blockhash;
+          txn.feePayer = authorization?.publicKey;
+        });
+        await authorizeSession(wallet);
+        const signedTransactions = await wallet.signTransactions({
+          transactions: transactions,
+        });
+        return signedTransactions;
       });
-      return signedTransactions;
-    });
-  }, [authorizeSession, connection, authorization]);
-
+    },
+    [authorizeSession, connection, authorization],
+  );
 
   const sendTransaction = useCallback(
-    async (txn: Transaction): Promise<TransactionConfirmationStrategy | undefined> => {
+    async (
+      txn: Transaction,
+    ): Promise<TransactionConfirmationStrategy | undefined> => {
       const signedTransaction = (await signAllTransactions([txn]))[0];
 
       if (authorizationInProgress) {
@@ -166,11 +191,11 @@ function WalletProvider({autoconnect = true, children}: {children: ReactNode, au
         const signature = await connection.sendRawTransaction(
           signedTransaction!.serialize(),
           // TODO: REMOVE
-          {skipPreflight: true}
+          {skipPreflight: true},
         );
         return {
           signature,
-          ...latestBlockhash
+          ...latestBlockhash,
         };
       } catch (err: any) {
         alertAndLog(
@@ -181,8 +206,8 @@ function WalletProvider({autoconnect = true, children}: {children: ReactNode, au
         setAuthorizationInProgress(false);
       }
     },
-    [authorizeSession, connection, authorizationInProgress, authorization],
-  );  
+    [connection, authorizationInProgress, signAllTransactions],
+  );
 
   const connect = useCallback(async () => {
     try {
@@ -203,12 +228,6 @@ function WalletProvider({autoconnect = true, children}: {children: ReactNode, au
     }
   }, [authorizationInProgress, authorizeSession]);
 
-  const disconnect = useCallback(async () => {
-    transact(async wallet => {
-      await deauthorizeSession(wallet);
-    });
-  }, [authorizationInProgress, authorizeSession]);
-
   const deauthorizeSession = useCallback(
     async (wallet: DeauthorizeAPI) => {
       if (authorization?.authToken == null) {
@@ -220,6 +239,12 @@ function WalletProvider({autoconnect = true, children}: {children: ReactNode, au
     },
     [authorization, setAuthorization],
   );
+
+  const disconnect = useCallback(async () => {
+    transact(async wallet => {
+      await deauthorizeSession(wallet);
+    });
+  }, [deauthorizeSession]);
 
   const value = useMemo(
     () => ({
@@ -238,14 +263,12 @@ function WalletProvider({autoconnect = true, children}: {children: ReactNode, au
       authorizationInProgress,
       signMessage,
       sendTransaction,
-      signAllTransactions
+      signAllTransactions,
     ],
   );
 
   return (
-    <WalletContext.Provider value={value}>
-      {children}
-    </WalletContext.Provider>
+    <WalletContext.Provider value={value}>{children}</WalletContext.Provider>
   );
 }
 

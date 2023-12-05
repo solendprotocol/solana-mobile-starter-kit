@@ -1,12 +1,18 @@
-import React, { PropsWithChildren, useContext, useEffect, useState } from 'react';
-import { useConnection } from '@/components/providers/useConnection';
-import { useWallet } from '@/components/providers/useWallet';
-import { NATIVE_MINT, TOKEN_PROGRAM_ID } from '@solana/spl-token';
-import { PublicKey } from '@solana/web3.js';
+import React, {
+  PropsWithChildren,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from 'react';
+import {useConnection} from '@/components/providers/useConnection';
+import {useWallet} from '@/components/providers/useWallet';
+import {NATIVE_MINT, TOKEN_PROGRAM_ID} from '@solana/spl-token';
+import {PublicKey} from '@solana/web3.js';
 import BN from 'bn.js';
-import { DECIMALS_PER_SOL, fromUnits } from '@/shared/utils';
-import { TokenAccountType, TokenInfoType } from '@/shared/types';
-import { CHAIN_ID, CLUSTER, DEVNET_SOL_TOKEN_INFO } from '@/shared/configs';
+import {DECIMALS_PER_SOL, fromUnits} from '@/shared/utils';
+import {TokenAccountType, TokenInfoType} from '@/shared/types';
+import {CHAIN_ID, CLUSTER, DEVNET_SOL_TOKEN_INFO} from '@/shared/configs';
 
 export type PreferredTokenListMode = 'all' | 'strict';
 
@@ -53,15 +59,19 @@ const AccountContext = React.createContext<TokensContext>({
   refresh: () => {},
 });
 
-const TokensProvider: React.FC<PropsWithChildren> = ({ children }) => {
-  const { publicKey } = useWallet();
-  const { connection } = useConnection();
+const TokensProvider: React.FC<PropsWithChildren> = ({children}) => {
+  const {publicKey} = useWallet();
+  const {connection} = useConnection();
 
   const [loading, setLoading] = useState(false);
-  const [tokenAccounts, setTokenAccounts] = useState<Record<string, TokenData>>({});
+  const [tokenAccounts, setTokenAccounts] = useState<Record<string, TokenData>>(
+    {},
+  );
 
-  const fetchNative = async () => {
-    if (!publicKey ) return null;
+  const fetchNative = useCallback(async () => {
+    if (!publicKey) {
+      return null;
+    }
 
     const response = await connection.getAccountInfo(publicKey);
     if (response) {
@@ -72,82 +82,105 @@ const TokensProvider: React.FC<PropsWithChildren> = ({ children }) => {
         decimals: 9,
       };
     }
-  };
+  }, [publicKey, connection]);
 
+  const fetchAllTokenInfos = useCallback(
+    async (preferredTokenListMode: PreferredTokenListMode) => {
+      const tokens: Array<TokenInfoType> = await (preferredTokenListMode ===
+      'strict'
+        ? await fetch('https://token.jup.ag/strict')
+        : await fetch('https://token.jup.ag/all')
+      ).json();
 
-const fetchAllTokenInfos = async (preferredTokenListMode: PreferredTokenListMode) => {
-  const tokens: Array<TokenInfoType> = await (preferredTokenListMode === 'strict'
-    ? await fetch('https://token.jup.ag/strict')
-    : await fetch('https://token.jup.ag/all')
-  ).json();
+      if (CLUSTER === 'devnet') {
+        tokens.push(DEVNET_SOL_TOKEN_INFO);
+      }
 
-  if (CLUSTER === 'devnet') {
-    tokens.push(DEVNET_SOL_TOKEN_INFO);
-  }
+      const list = tokens.filter(token => token.chainId === CHAIN_ID);
 
-  const list = tokens.filter(token => token.chainId === CHAIN_ID);
+      const tokenMap = list.reduce((acc, item) => {
+        acc.set(item.address, item);
+        return acc;
+      }, new Map());
 
-  const tokenMap = list.reduce((acc, item) => {
-    acc.set(item.address, item);
-    return acc;
-  }, new Map());
+      return tokenMap;
+    },
+    [],
+  );
 
-  return tokenMap
-};
-
-  const fetchAllTokens = async () => {
-    if (!publicKey) return {};
+  const fetchAllTokens = useCallback(async () => {
+    if (!publicKey) {
+      return {};
+    }
 
     const response = await connection.getParsedTokenAccountsByOwner(
       publicKey,
-      { programId: TOKEN_PROGRAM_ID },
+      {programId: TOKEN_PROGRAM_ID},
       'confirmed',
     );
 
-    const reducedResult = response.value.reduce((acc, item: ParsedTokenData) => {
-      acc[item.account.data.parsed.info.mint] = {
-        balance: item.account.data.parsed.info.tokenAmount.uiAmount,
-        balanceLamports: new BN(0),
-        hasBalance: item.account.data.parsed.info.tokenAmount.uiAmount > 0,
-        decimals: item.account.data.parsed.info.tokenAmount.decimals,
-      };
-      return acc;
-    }, {} as Record<string, TokenAccountType>);
+    const reducedResult = response.value.reduce(
+      (acc, item: ParsedTokenData) => {
+        acc[item.account.data.parsed.info.mint] = {
+          balance: item.account.data.parsed.info.tokenAmount.uiAmount,
+          balanceLamports: new BN(0),
+          hasBalance: item.account.data.parsed.info.tokenAmount.uiAmount > 0,
+          decimals: item.account.data.parsed.info.tokenAmount.decimals,
+        };
+        return acc;
+      },
+      {} as Record<string, TokenAccountType>,
+    );
 
     return reducedResult;
-  };
+  }, [connection, publicKey]);
 
-  const refresh = async () => {
+  const refresh = useCallback(async () => {
     if (!publicKey) {
       setTokenAccounts({});
       return;
     }
 
     // Fetch all tokens balance
-    const [nativeAccount, accounts, tokenInfos] = await Promise.all([fetchNative(), fetchAllTokens(), fetchAllTokenInfos('strict')]);
+    const [nativeAccount, accounts, tokenInfos] = await Promise.all([
+      fetchNative(),
+      fetchAllTokens(),
+      fetchAllTokenInfos('strict'),
+    ]);
 
     setTokenAccounts({
-      ...Object.fromEntries(Object.entries(accounts).map(([mintAddress, account]) => ({
-        ...account,
-        ...tokenInfos.get(mintAddress)
-      }))),
-      ...(nativeAccount ? {
-        [NATIVE_MINT.toString()]: {...nativeAccount, ...tokenInfos.get(NATIVE_MINT.toBase58())}
-      } : {})
+      ...Object.fromEntries(
+        Object.entries(accounts).map(([mintAddress, account]) => ({
+          ...account,
+          ...tokenInfos.get(mintAddress),
+        })),
+      ),
+      ...(nativeAccount
+        ? {
+            [NATIVE_MINT.toString()]: {
+              ...nativeAccount,
+              ...tokenInfos.get(NATIVE_MINT.toBase58()),
+            },
+          }
+        : {}),
     });
     setLoading(false);
-  };
+  }, [fetchAllTokens, fetchNative, fetchAllTokenInfos, publicKey]);
 
   // Fetch all accounts for the current wallet
   useEffect(() => {
     refresh();
-  }, [publicKey]);
+  }, [publicKey, refresh]);
 
-  return <AccountContext.Provider value={{ tokenAccounts, loading, refresh }}>{children}</AccountContext.Provider>;
+  return (
+    <AccountContext.Provider value={{tokenAccounts, loading, refresh}}>
+      {children}
+    </AccountContext.Provider>
+  );
 };
 
 const useTokens = () => {
   return useContext(AccountContext);
 };
 
-export { TokensProvider, useTokens };
+export {TokensProvider, useTokens};

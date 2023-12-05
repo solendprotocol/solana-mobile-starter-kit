@@ -49,56 +49,56 @@ function Typography({
   onPress,
   onLongPress,
 }: TypographyPropsType): ReactElement {
-  const fontStyleMap: {[key: string]: TextStyle}= {
+  const fontStyleMap: {[key: string]: TextStyle} = {
     display: {
-      fontWeight: "300",
+      fontWeight: '300',
       fontSize: 36,
-      color: colors[color]
+      color: colors[color],
     },
     title: {
-      fontWeight: "600",
+      fontWeight: '600',
       fontSize: 16,
-      color: colors[color]
+      color: colors[color],
     },
     headline: {
-      fontWeight: "600",
+      fontWeight: '600',
       fontSize: 13,
       lineHeight: 20,
-      color: colors[color]
+      color: colors[color],
     },
     body: {
-      fontWeight: "400",
+      fontWeight: '400',
       fontSize: 13,
       lineHeight: 20,
-      color: colors[color]
+      color: colors[color],
     },
     bodyMono: {
-      fontWeight: "400",
+      fontWeight: '400',
       fontFamily: 'monospace',
       fontSize: 13,
-      color: colors[color]
+      color: colors[color],
     },
     label: {
-      fontWeight: "600",
+      fontWeight: '600',
       fontSize: 11,
-      color: colors[color]
+      color: colors[color],
     },
     caption: {
-        fontWeight: "400",
+      fontWeight: '400',
       fontSize: 11,
       lineHeight: 16,
-      color: colors[color]
+      color: colors[color],
     },
     captionMono: {
-        fontWeight: "400",
-        fontFamily: 'monospace',
+      fontWeight: '400',
+      fontFamily: 'monospace',
       fontSize: 10,
-      color: colors[color]
+      color: colors[color],
     },
     disclosure: {
-      fontWeight: "400",
+      fontWeight: '400',
       fontSize: 9,
-      color: colors[color]
+      color: colors[color],
     },
   };
 

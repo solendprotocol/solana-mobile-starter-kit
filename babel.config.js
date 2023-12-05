@@ -17,11 +17,11 @@ module.exports = {
           '@/images': './images',
           '@/shared': './shared',
           '@/assets': './assets',
-          '@': '.'
+          '@': '.',
         },
       },
     ],
     'react-native-reanimated/plugin',
-    'nativewind/babel'
+    'nativewind/babel',
   ],
 };

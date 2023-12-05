@@ -5,7 +5,7 @@
   "scripts": {
     "android": "react-native run-android",
     "ios": "react-native run-ios",
-    "lint": "eslint .",
+    "lint": "yarn prettier --write App.tsx \"{shared,screens,components}/**/*.js\" && eslint .",
     "start": "react-native start",
     "test": "jest"
   },

@@ -8,6 +8,7 @@ import {
 import {ParamListBase} from '@react-navigation/native';
 import React from 'react';
 import {Image, TouchableOpacity, View} from 'react-native';
+import {LOGO_TYPE} from '@/shared/configs';
 
 export function Header({
   leftNavigation,
@@ -26,7 +27,7 @@ export function Header({
         </TouchableOpacity>
         <Image
           className="w-40"
-          source={require('@/assets/logotype.png')}
+          source={require(LOGO_TYPE)}
           resizeMode="contain"
         />
       </View>

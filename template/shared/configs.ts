@@ -1,3 +1,7 @@
+import app from '../app.json';
+
+import {Cluster} from '@solana/web3.js';
+
 export type ENV = 'mainnet-beta' | 'testnet' | 'devnet' | 'localnet';
 
 export const CLUSTER_TO_CHAIN_ID: Record<ENV, number> = {
@@ -22,9 +26,11 @@ export const DEVNET_SOL_TOKEN_INFO = {
   extensions: {},
 };
 
-// TODO
+// Configure metadata shown during signature in wallet
 export const APP_IDENTITY = {
-  name: 'Solend Mobile',
-  uri: 'https://solend.fi/',
+  name: app.displayName,
+  uri: 'https://solana.com',
   icon: 'favicon.ico',
 };
+
+export const LOGO_TYPE = '@/assets/logotype.png';

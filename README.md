@@ -9,7 +9,8 @@ For help getting started with this template, checkout the the #dev-support chann
 
 ## Features
 - Basic routing and navigation via [React Navigation](https://reactnavigation.org/) with a Wallet drawer
-- Tailwind support out of the box (via Native Wind)Quick configs to show off your brand
+- Tailwind support out of the box (via Native Wind)
+- Quick configs to incorporate branding
 - A familiar useWallet interface wrapping the [Mobile Wallet Adapter](https://github.com/solana-mobile/mobile-wallet-adapter/tree/main/js/packages/mobile-wallet-adapter-protocol) for connecting to wallets and signing transactions/messages
 - [web3.js](https://solana-labs.github.io/solana-web3.js/) for constructing transactions and an RPC `connection` client.
 - [Anchor TS SDK]([https://solana-labs.github.io/solana-web3.js/](https://github.com/coral-xyz/anchor/tree/master/ts/packages/anchor)) preinstalled

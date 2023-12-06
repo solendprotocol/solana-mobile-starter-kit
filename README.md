@@ -46,9 +46,9 @@ Follow the guide to make sure you:
 ## Usage
 1. Initialize project template
 ```
-npx react-native init MySolanaDapp --template https://github.com/solendprotocol/solana-mobile-starter-kit.git --npm
+npx react-native init MySolanaDapp --template https://github.com/solendprotocol/solana-mobile-starter-kit.git
 ```
-note: The `--npm` flag is only needed if you're using Yarn 3 as a package manager. Once the template is initialized, you can delete the `package-lock.json` and run `yarn install` to continue using Yarn 3.
+note: An `--npm` flag is needed if you're using Yarn 3 as a package manager. Once the template is initialized, you can delete the `package-lock.json` and run `yarn install` to continue using Yarn 3.
 
 2. Install dependencies
 - `yarn install` or `npm install`
@@ -82,11 +82,6 @@ This template only works with the new CLI. You can uninstall and reinstall it as
 
 - `Looks like your iOS environment is not properly set`:
   -  You can ignore this during template initialization and build the Android app as normal. This template is only compatible with Android.
-
-<br>
-
-- `Usage Error: It seems you are trying to add a package using a https:... url; we now require package names to be explicitly specified.`
-  - This error happens on certain versions of `yarn`, and occurs if you try to initialize the template through the Github repo URL, rather than the npm package. To avoid this, use the `@solana-mobile/solana-mobile-dapp-scaffold` package as specified, or downgrade your `yarn` version to classic (1.22.x).
 
 <br>
 
